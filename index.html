@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RingWisp — International Ring Size Converter (US, UK, EU, JP, Swiss)</title>
+<meta name="description" content="RingWisp converts ring sizes between US/CA, UK/AU, EU/ISO, Japan/China and Swiss systems, plus inner diameter in mm and inches. Measure at home with a string or an existing ring, get finger-fit tips, and print a true-scale ring sizer. Free, no signup.">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { champagne:'#F7E8D0', champagneDeep:'#F1DCB8', gold:'#B45309', goldLight:'#D97706', espresso:'#292524', espressoSoft:'#44403C', cream:'#FFFBF3' },
+    fontFamily: { serif:['"Cormorant Garamond"','Georgia','serif'], sans:['Inter','system-ui','sans-serif'] }
+  } }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { -webkit-font-smoothing: antialiased; }
+  .gold-rule { background: linear-gradient(90deg, transparent, #B45309 20%, #B45309 80%, transparent); height:1px; }
+  .ring-glow { box-shadow: 0 0 0 6px rgba(180,83,9,.12), 0 18px 50px -18px rgba(41,37,36,.35); }
+  .tab-active { background:#292524; color:#F7E8D0; }
+  .sizer-circle { border-radius:9999px; box-shadow: inset 0 0 0 0.35mm #292524; margin:0 auto; background:#fff; }
+  .verify-bar { height:3mm; background:#292524; }
+  select, input[type="text"], input[type="number"] { color:#292524; }
+  @media print {
+    .no-print { display:none !important; }
+    .print-only { display:block !important; }
+    body { background:#ffffff !important; }
+    #print-sizer { display:block !important; }
+    @page { size:A4; margin:12mm; }
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I convert a US ring size to a UK ring size?",
+      "acceptedAnswer": { "@type": "Answer", "text": "US and UK sizes move in lockstep: every half US size equals one full UK letter. For example, US 6 = UK L, US 7 = UK N, US 8 = UK P and US 9 = UK R. Enter your US size in the RingWisp converter above and it shows the UK equivalent instantly, along with EU, Japanese and Swiss sizes." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is my ring size in millimetres?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Ring sizes in millimetres usually mean the inner diameter of the ring. A US size 7 has an inner diameter of 17.3 mm, a US 6 is 16.5 mm and a US 8 is 18.1 mm. The EU/ISO number is the inner circumference in millimetres instead — for example EU 54 means 54 mm around the inside. Use the measurement mode above: type your diameter or string length in mm to get every system at once." }
+    },
+    {
+      "@type": "Question",
+      "name": "How can I measure my ring size at home without a ring sizer?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Wrap a thin strip of paper or a piece of non-stretchy string snugly around the base of your finger, mark where it overlaps, then measure the length in millimetres — that is your inner circumference. Alternatively, measure the inner diameter of a ring that already fits with a ruler. Enter either number into RingWisp's measurement mode to get your size in all five systems." }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I convert a Japanese ring size to a US size?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Japanese sizes are roughly the inner circumference in millimetres minus 40. As a quick reference: Japan 12 = US 6, Japan 14 = US 7, Japan 17 = US 8 and Japan 19 = US 9. The converter above does exact Japan-to-US lookups across the full published chart." }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I size up for a wide band ring?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Bands wider than about 6 mm cover more skin and fit tighter, so most jewellers recommend going up half a US size (for example from 7 to 7.5). Slim bands under 4 mm can go the other way — if you sit between sizes, the smaller one usually works. RingWisp's fit tips apply this adjustment to your result automatically." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does my ring size change during the day?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — fingers are smallest in the cool morning and swell through the day, peaking in the warm evening, and heat, salt, exercise and even a long flight can add noticeable size. Measure in the evening at normal room temperature for the safest fit, and remember your dominant hand usually runs about half a size larger than the other." }
+    }
+  ]
+}
+</script>
+</head>
+<body id="top" class="bg-champagne text-espresso font-sans min-h-screen">
+
+<!-- ============ STICKY HEADER ============ -->
+<header class="no-print sticky top-0 z-40 bg-espresso/95 backdrop-blur border-b border-gold/40">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2.5">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="19" r="9" stroke="#D97706" stroke-width="2.4"/>
+        <path d="M11 8 L16 3 L21 8 L18.5 8 L18.5 10.5 L13.5 10.5 L13.5 8 Z" fill="#D97706"/>
+      </svg>
+      <span class="font-serif text-2xl tracking-wide text-champagne font-semibold">RingWisp</span>
+    </a>
+    <nav class="flex items-center gap-5 text-sm">
+      <a href="#top" class="text-champagne/90 hover:text-goldLight transition font-medium">Home</a>
+      <a href="https://fixoraa.tech" class="text-champagne/90 hover:text-goldLight transition font-medium">More Tools</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============ HERO ============ -->
+  <section class="no-print relative overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+      <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full border-[26px] border-gold/10"></div>
+      <div class="absolute -bottom-32 -left-20 w-[28rem] h-[28rem] rounded-full border-[34px] border-gold/10"></div>
+    </div>
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-8 text-center">
+      <p class="text-[11px] tracking-[0.3em] uppercase text-gold font-semibold mb-4">International Ring Size Converter</p>
+      <h1 class="font-serif text-4xl sm:text-6xl font-semibold leading-tight mb-4">Every ring size,<br class="sm:hidden"> in every country.</h1>
+      <p class="text-espressoSoft max-w-2xl mx-auto text-base sm:text-lg">Convert between <strong>US/CA</strong>, <strong>UK/AU</strong>, <strong>EU/ISO</strong>, <strong>Japan/China</strong> and <strong>Swiss</strong> sizes — or start from a millimetre measurement and discover your size everywhere. Free forever.</p>
+      <div class="mt-5 flex items-center justify-center gap-3 flex-wrap">
+        <span class="inline-flex items-center gap-1.5 bg-espresso text-champagne text-xs font-semibold tracking-wide px-4 py-2 rounded-full">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+          Unlimited Free Usage
+        </span>
+        <span class="text-xs text-espressoSoft">No signup &middot; No paywall &middot; No watermark</span>
+      </div>
+      <div class="gold-rule max-w-md mx-auto mt-8"></div>
+    </div>
+  </section>
+
+  <!-- TOP AD (verbatim) -->
+  <div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pt-4" role="complementary" aria-label="Advertisement">
+    <div class="mx-auto text-center" style="max-width:728px">
+      <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+      <div class="flex justify-center overflow-hidden">
+        <div class="origin-top scale-[0.44] sm:scale-100 shrink-0">
+          <script>
+            atOptions = { 'key' : '4e68ac77881c17fe128a46565d9a4e8c', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+          </script>
+          <script src="https://www.highrevenueformat.com/4e68ac77881c17fe128a46565d9a4e8c/invoke.js"></script>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ============ THE TOOL ============ -->
+  <section id="tool" class="no-print max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div class="bg-cream rounded-3xl ring-glow border border-gold/30 overflow-hidden">
+      <div class="bg-espresso px-6 sm:px-10 py-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+          <div>
+            <h2 class="font-serif text-2xl sm:text-3xl text-champagne font-semibold">The Converter</h2>
+            <p class="text-champagne/60 text-sm mt-1">Two directions: size &rarr; size, or measurement &rarr; size.</p>
+          </div>
+          <div class="flex rounded-full bg-champagne/10 p-1 text-sm font-medium" role="tablist" aria-label="Conversion direction">
+            <button id="tab-size" role="tab" class="tab-active px-4 py-2 rounded-full transition" onclick="rwSwitchTab('size')">I know my size</button>
+            <button id="tab-measure" role="tab" class="px-4 py-2 rounded-full transition text-champagne/80" onclick="rwSwitchTab('measure')">I measured my finger</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 sm:px-10 py-8">
+        <!-- PANEL A: size -> size -->
+        <div id="panel-size">
+          <div class="grid sm:grid-cols-3 gap-4 items-end">
+            <div>
+              <label for="in-system" class="block text-xs font-semibold tracking-wider uppercase text-espressoSoft mb-2">Size system</label>
+              <select id="in-system" class="w-full rounded-xl border border-gold/40 bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-gold">
+                <option value="us">US / Canada</option>
+                <option value="uk">UK / Australia</option>
+                <option value="eu">EU / ISO (mm circ.)</option>
+                <option value="jp">Japan / China</option>
+                <option value="sw">Swiss</option>
+              </select>
+            </div>
+            <div>
+              <label for="in-size" class="block text-xs font-semibold tracking-wider uppercase text-espressoSoft mb-2">Your size</label>
+              <input id="in-size" type="text" inputmode="text" placeholder="e.g. 7 &nbsp;·&nbsp; N &nbsp;·&nbsp; 54 &nbsp;·&nbsp; 14" class="w-full rounded-xl border border-gold/40 bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-gold">
+            </div>
+            <button onclick="rwConvertFromSize()" class="rounded-xl bg-gold hover:bg-goldLight text-white font-semibold px-6 py-3 transition text-base">Convert</button>
+          </div>
+          <p class="text-xs text-espressoSoft mt-3">UK accepts letters like <span class="font-mono">N</span>, <span class="font-mono">N½</span>, <span class="font-mono">Z+1</span>. EU accepts whole mm (e.g. 54). Try the demo: <button class="underline text-gold font-medium" onclick="document.getElementById('in-size').value='7';rwConvertFromSize()">US 7</button></p>
+        </div>
+
+        <!-- PANEL B: measurement -> size -->
+        <div id="panel-measure" class="hidden">
+          <div class="grid sm:grid-cols-3 gap-4 items-end">
+            <div>
+              <label for="in-kind" class="block text-xs font-semibold tracking-wider uppercase text-espressoSoft mb-2">What did you measure?</label>
+              <select id="in-kind" class="w-full rounded-xl border border-gold/40 bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-gold">
+                <option value="dia">Inner diameter of a ring (mm)</option>
+                <option value="circ">String / paper length around finger (mm)</option>
+              </select>
+            </div>
+            <div>
+              <label for="in-mm" class="block text-xs font-semibold tracking-wider uppercase text-espressoSoft mb-2">Millimetres</label>
+              <input id="in-mm" type="number" step="0.1" min="10" max="26" placeholder="e.g. 17.3" class="w-full rounded-xl border border-gold/40 bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-gold">
+            </div>
+            <button onclick="rwConvertFromMeasure()" class="rounded-xl bg-gold hover:bg-goldLight text-white font-semibold px-6 py-3 transition text-base">Find my size</button>
+          </div>
+          <p class="text-xs text-espressoSoft mt-3">Measure twice and average. In-between values are matched to the nearest published size and flagged as approximate.</p>
+        </div>
+
+        <!-- FIT OPTIONS -->
+        <div class="mt-8 rounded-2xl border border-gold/30 bg-champagne/60 p-5">
+          <h3 class="font-serif text-xl font-semibold mb-1">Finger-fit tips <span class="text-sm font-sans font-normal text-espressoSoft">— personalise your result</span></h3>
+          <div class="grid sm:grid-cols-3 gap-4 mt-4">
+            <div>
+              <label for="opt-hand" class="block text-xs font-semibold tracking-wider uppercase text-espressoSoft mb-2">Which hand?</label>
+              <select id="opt-hand" onchange="rwRefreshFit()" class="w-full rounded-xl border border-gold/40 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold">
+                <option value="nondominant">Non-dominant hand</option>
+                <option value="dominant">Dominant hand</option>
+              </select>
+            </div>
+            <div>
+              <label for="opt-band" class="block text-xs font-semibold tracking-wider uppercase text-espressoSoft mb-2">Band width</label>
+              <select id="opt-band" onchange="rwRefreshFit()" class="w-full rounded-xl border border-gold/40 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold">
+                <option value="standard">Standard (4–6 mm)</option>
+                <option value="slim">Slim (under 4 mm)</option>
+                <option value="wide">Wide (over 6 mm)</option>
+              </select>
+            </div>
+            <div>
+              <label for="opt-time" class="block text-xs font-semibold tracking-wider uppercase text-espressoSoft mb-2">Measured…</label>
+              <select id="opt-time" onchange="rwRefreshFit()" class="w-full rounded-xl border border-gold/40 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold">
+                <option value="midday">Midday</option>
+                <option value="morning">Morning</option>
+                <option value="evening">Evening</option>
+              </select>
+            </div>
+          </div>
+          <ul id="fit-tips" class="mt-4 space-y-2 text-sm text-espressoSoft"></ul>
+        </div>
+
+        <!-- RESULTS -->
+        <div id="result" class="mt-8 hidden" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM AD (verbatim) -->
+  <div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pb-4" role="complementary" aria-label="Advertisement">
+    <div class="mx-auto text-center" style="max-width:728px">
+      <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+      <div class="flex justify-center overflow-hidden">
+        <script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="464498"></script>
+      </div>
+    </div>
+  </div>
+  <!-- ============ FULL CHART ============ -->
+  <section class="no-print max-w-6xl mx-auto px-4 sm:px-6 py-10">
+    <div class="text-center mb-8">
+      <p class="text-[11px] tracking-[0.3em] uppercase text-gold font-semibold mb-3">Reference</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-semibold">The complete ring size chart</h2>
+      <div class="gold-rule max-w-xs mx-auto mt-5"></div>
+      <p class="text-espressoSoft text-sm mt-4 max-w-2xl mx-auto">Every published size from US 3 to US 14, cross-referenced across all five systems with inner diameter and circumference. Values follow the standard international jewellery chart; Swiss sizes follow the Swiss convention (inner circumference minus 40).</p>
+    </div>
+    <div class="bg-cream rounded-3xl border border-gold/30 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[640px]">
+          <thead>
+            <tr class="bg-espresso text-champagne text-xs uppercase tracking-wider">
+              <th class="px-4 py-3.5 text-left font-semibold">US / CA</th>
+              <th class="px-4 py-3.5 text-left font-semibold">UK / AU</th>
+              <th class="px-4 py-3.5 text-left font-semibold">EU / ISO</th>
+              <th class="px-4 py-3.5 text-left font-semibold">Japan / CN</th>
+              <th class="px-4 py-3.5 text-left font-semibold">Swiss</th>
+              <th class="px-4 py-3.5 text-left font-semibold">Diameter (mm)</th>
+              <th class="px-4 py-3.5 text-left font-semibold">Circumf. (mm)</th>
+            </tr>
+          </thead>
+          <tbody id="chart-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRINTABLE SIZER ============ -->
+  <section id="print-sizer" class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+    <div class="no-print text-center mb-6">
+      <p class="text-[11px] tracking-[0.3em] uppercase text-gold font-semibold mb-3">True-scale tool</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-semibold">Printable ring sizer</h2>
+      <div class="gold-rule max-w-xs mx-auto mt-5"></div>
+      <p class="text-espressoSoft text-sm mt-4 max-w-2xl mx-auto">Place a ring that fits you over the circles — the right size is the one whose <strong>line sits exactly on the ring's inner edge</strong>. Print at <strong>100% scale</strong> (no &ldquo;fit to page&rdquo;), then check the 100&nbsp;mm bar below with a ruler.</p>
+      <button onclick="window.print()" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-espresso text-champagne font-semibold px-6 py-3 hover:bg-gold transition text-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        Print the sizer
+      </button>
+    </div>
+    <div class="bg-white rounded-3xl border border-gold/30 p-6 sm:p-10">
+      <div class="print-only hidden text-center mb-6">
+        <p class="font-serif text-2xl font-semibold">RingWisp true-scale ring sizer</p>
+        <p class="text-sm mt-1">Printed at 100% scale · Fit your ring inside the circles so its inner edge touches the line · Verify with the 100 mm bar</p>
+      </div>
+      <div id="sizer-grid" class="flex flex-wrap justify-center gap-x-8 gap-y-10 items-end"></div>
+      <div class="mt-12 max-w-md mx-auto text-center">
+        <p class="text-xs uppercase tracking-widest text-espressoSoft mb-2">Scale check — must measure exactly 100 mm</p>
+        <div class="verify-bar w-full" style="width:100mm;max-width:100%"></div>
+        <div class="flex justify-between text-[10px] text-espressoSoft mt-1"><span>0</span><span>50 mm</span><span>100 mm</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MEASURING GUIDE ============ -->
+  <section class="no-print max-w-6xl mx-auto px-4 sm:px-6 py-10">
+    <div class="text-center mb-8">
+      <p class="text-[11px] tracking-[0.3em] uppercase text-gold font-semibold mb-3">How-to</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-semibold">Measure at home, three ways</h2>
+      <div class="gold-rule max-w-xs mx-auto mt-5"></div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-cream rounded-3xl border border-gold/30 p-7">
+        <div class="w-11 h-11 rounded-full bg-gold/15 text-gold flex items-center justify-center font-serif text-xl font-bold mb-4">1</div>
+        <h3 class="font-serif text-2xl font-semibold mb-2">The string method</h3>
+        <p class="text-sm text-espressoSoft leading-relaxed">Wrap a thin strip of paper or non-stretchy string snugly around the base of the finger — snug, not tight. Mark where the end overlaps, lay it flat and measure the length in millimetres. That number is your inner circumference: type it into the converter's measurement mode.</p>
+      </div>
+      <div class="bg-cream rounded-3xl border border-gold/30 p-7">
+        <div class="w-11 h-11 rounded-full bg-gold/15 text-gold flex items-center justify-center font-serif text-xl font-bold mb-4">2</div>
+        <h3 class="font-serif text-2xl font-semibold mb-2">An existing ring</h3>
+        <p class="text-sm text-espressoSoft leading-relaxed">Take a ring that already fits the finger and lay it on a ruler. Measure the <em>inside</em> diameter edge-to-edge in millimetres — or hold it up to the printable circles above. Enter the diameter in millimetres and every system appears at once.</p>
+      </div>
+      <div class="bg-cream rounded-3xl border border-gold/30 p-7">
+        <div class="w-11 h-11 rounded-full bg-gold/15 text-gold flex items-center justify-center font-serif text-xl font-bold mb-4">3</div>
+        <h3 class="font-serif text-2xl font-semibold mb-2">The paper strip sizer</h3>
+        <p class="text-sm text-espressoSoft leading-relaxed">Cut a 10&nbsp;mm-wide strip of paper, wrap it around the finger and slide a pin through the overlap. Open it flat: the pin-to-end distance in millimetres is your circumference. Paper stretches a little, so measure twice and take the average — and measure in the evening.</p>
+      </div>
+    </div>
+    <div class="mt-6 bg-espresso text-champagne rounded-3xl p-7 sm:p-8">
+      <h3 class="font-serif text-2xl font-semibold mb-4 text-goldLight">Golden rules before you order</h3>
+      <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-champagne/85 leading-relaxed">
+        <li class="flex gap-2"><span class="text-goldLight">◆</span> Measure in the <strong>evening</strong>, when fingers are at their largest.</li>
+        <li class="flex gap-2"><span class="text-goldLight">◆</span> Measure the <strong>exact finger</strong> — dominant hands run ~½ size larger.</li>
+        <li class="flex gap-2"><span class="text-goldLight">◆</span> <strong>Wide bands</strong> (over 6&nbsp;mm) need half a size up; slim bands can size down.</li>
+        <li class="flex gap-2"><span class="text-goldLight">◆</span> Big <strong>knuckles</strong>? Size to clear the knuckle, not the base.</li>
+        <li class="flex gap-2"><span class="text-goldLight">◆</span> Hands must be at <strong>room temperature</strong> — cold shrinks, heat swells.</li>
+        <li class="flex gap-2"><span class="text-goldLight">◆</span> Between sizes? Comfort beats precision — pick the one that slides over the knuckle with slight resistance.</li>
+      </ul>
+    </div>
+  </section>
+  <!-- ============ SEO ARTICLE ============ -->
+  <section class="no-print max-w-4xl mx-auto px-4 sm:px-6 py-12">
+    <div class="text-center mb-8">
+      <p class="text-[11px] tracking-[0.3em] uppercase text-gold font-semibold mb-3">The definitive guide</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-semibold">Ring sizes, explained properly</h2>
+      <div class="gold-rule max-w-xs mx-auto mt-5"></div>
+    </div>
+    <div id="seo-article" class="prose-p text-espressoSoft leading-relaxed space-y-5 text-[15px]">
+      <p><strong class="text-espresso">Buying a ring should be romantic, not stressful — yet nothing ruins the moment like a beautiful ring that will not slide past the knuckle.</strong> The good news is that ring sizing is not mysterious at all. Every sizing system on earth describes exactly the same physical thing: the inside circumference of the ring, measured in millimetres. The only difference is the label each country sticks on that measurement. A ring size converter simply translates those labels, and once you understand the handful of systems in use, you can shop for rings anywhere in the world with total confidence.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">Why one finger has five different sizes</h3>
+      <p>There are five major ring sizing systems, and a single finger can legitimately be called five different &ldquo;sizes&rdquo; at once. The <strong class="text-espresso">US and Canadian system</strong> uses numbers and half-numbers — 6, 6.5, 7 — where each whole size represents about 0.8&nbsp;mm of inner diameter. The <strong class="text-espresso">UK, Australian and New Zealand system</strong> uses letters: each half US size equals one full UK letter, so the alphabet marches upward from F through Z and beyond. The <strong class="text-espresso">EU / ISO system</strong> (also called the French system) is the most honest of all: the number <em>is</em> the inner circumference in millimetres, so EU 54 means 54&nbsp;mm around the inside. The <strong class="text-espresso">Japanese and Chinese system</strong> uses whole numbers that run roughly as the inner circumference minus 40. And the <strong class="text-espresso">Swiss system</strong>, born in the Swiss jewellery industry, follows nearly the same convention as the Japanese one: Swiss size equals inner circumference in millimetres minus 40, rounded to the nearest whole number. Because all five describe the same circle, conversion between them is exact — there is no opinion involved, only arithmetic and published charts.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">The ring size chart in mm: your anchor measurement</h3>
+      <p>Millimetres are the universal language underneath every system, which is why a ring size chart in mm is the most reliable reference you can own. Two numbers matter. The <strong class="text-espresso">inner diameter</strong> is the straight-line distance across the inside of the ring — a US size 7 measures 17.3&nbsp;mm across, a US 6 measures 16.5&nbsp;mm, and a US 8 measures 18.1&nbsp;mm. The <strong class="text-espresso">inner circumference</strong> is the distance around the inside — simply the diameter multiplied by pi — and it is what the EU number reports directly. Whenever systems disagree by a hair (and published charts do differ by fractions of a millimetre between manufacturers), the millimetre measurement is the ground truth to trust. That is why RingWisp always shows diameter and circumference alongside every conversion: the numbers behind the labels are what actually determine fit.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">US to UK ring size: the conversion everyone looks up</h3>
+      <p>The single most-searched conversion in jewellery is US to UK ring size, usually by shoppers eyeing a ring on an American site while living under the British letter system — or the reverse. The relationship is beautifully simple: <strong class="text-espresso">each half-step in the US equals one full letter in the UK</strong>. US 6 is UK L, US 6.5 is UK M, US 7 is UK N, US 7.5 is UK O, US 8 is UK P, US 8.5 is UK Q, US 9 is UK R, US 9.5 is UK S, US 10 is UK T, and the pattern continues up the alphabet. Larger than Z, the UK system keeps counting with Z+1, Z+2 and so on. One caution: some jewellers stock quarter sizes, and vintage charts occasionally disagree by half a letter, so for anything expensive — an engagement ring, a wedding band — confirm against the millimetre diameter rather than trusting a letter alone.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">Japan to US ring size: decoding the Asian system</h3>
+      <p>Japan to US ring size conversion trips people up because the Japanese numbers look nothing like the American ones — a Japanese 14 sounds enormous next to a US 7, yet they are the same ring. The Japanese scale starts at an inner diameter of 13&nbsp;mm for size 1 and climbs by one-third of a millimetre per size. In practice, you rarely need the formula because the mapping is fixed: Japan 12 is US 6, Japan 14 is US 7, Japan 17 is US 8, Japan 19 is US 9, Japan 22 is US 10, and Japan 24 is US 11. The same numbers are used across China, South Korea and much of Southeast Asia, so one lookup covers the whole region. If you remember only one rule of thumb, make it this: <strong class="text-espresso">subtract 40 from the inner circumference in millimetres and you land very close to both the Japanese and the Swiss size</strong>.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">How to measure ring size at home</h3>
+      <p>You do not need a jeweller visit to get an accurate size — three at-home methods, done carefully, get you within a quarter size of a professional measurement. <strong class="text-espresso">Method one, the string method:</strong> wrap a thin strip of paper or a piece of non-stretchy string snugly (not tightly) around the base of the finger, mark where it overlaps, lay it flat and measure the length in millimetres. That length is your inner circumference — feed it straight into the measurement mode of the converter above. <strong class="text-espresso">Method two, an existing ring:</strong> find a ring that already fits the target finger comfortably, lay it on a ruler and measure the inside diameter edge to edge in millimetres, or compare it against the printable true-scale circles above. <strong class="text-espresso">Method three, the paper strip sizer:</strong> cut a strip about 10&nbsp;mm wide, wrap it around the finger, push a pin through the overlap, then measure from the pin to the end of the strip. Whichever method you choose, measure twice and average the results, use a ruler with millimetre markings (not a soft tape alone, which can stretch), and write the number down immediately — memory is a poor measuring instrument.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">Finger-specific fitting: the details most guides skip</h3>
+      <p>Here is where most online guides stop and where real-world fit actually lives. <strong class="text-espresso">Dominant versus non-dominant hand:</strong> the hand you write with does more work, carries slightly more muscle, and typically measures about half a US size larger than the same finger on the other hand. Always measure the exact finger that will wear the ring — a size taken on the left ring finger will feel tight on the right. <strong class="text-espresso">Wide-band adjustment:</strong> a slim 2&nbsp;mm band and a chunky 8&nbsp;mm band in the &ldquo;same&rdquo; size do not feel the same, because a wider band contacts more skin and resists sliding over the knuckle. The industry rule is simple: for bands wider than about 6&nbsp;mm, go up half a US size; for bands under 4&nbsp;mm, size down if you fall between two sizes. <strong class="text-espresso">Time of day:</strong> fingers are living tissue. They are slimmest in the cool morning, swell through the afternoon, and reach their largest in the warm evening — heat, salty food, exercise, alcohol and even a long flight can add a noticeable fraction of a size. The safest single measurement you can take is in the evening, at normal room temperature, on a day you have not just exercised. Two more variables worth knowing: prominent knuckles mean you should size to clear the knuckle rather than hug the base (the ring will sit slightly looser at the base, and that is correct), and cold hands can measure a full half size smaller than the same hands an hour later — never size a ring on winter-cold fingers.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">Half sizes, comfort fit, and resizing</h3>
+      <p>Between two whole sizes? You are in good company — a large share of adults genuinely fall between standard sizes, which is exactly why half sizes exist and why most jewellers stock them. If your measurement lands between, say, US 7 and 7.5, consider the band: slim band, take the 7; wide band, take the 7.5. &ldquo;Comfort fit&rdquo; bands, which are slightly domed on the inside, also slide on more easily than flat interiors and can let you wear a quarter size smaller than usual. As for resizing: plain gold and platinum bands without stones can usually be resized up or down by about one full size by any competent jeweller, but eternity bands (stones all the way around), tension settings, and some titanium or tungsten rings cannot be resized at all. When resizing is impossible, getting the size right the first time is not a luxury — it is the whole game.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">Buying rings internationally without fear</h3>
+      <p>Cross-border ring shopping is where a converter earns its keep. A &ldquo;size 54&rdquo; on a European site, a &ldquo;size N&rdquo; on a British site and a &ldquo;size 7&rdquo; on an American site are the same ring — but only if you verify. Always convert through the millimetre diameter as a sanity check, because regional manufacturing tolerances mean two charts can disagree by a quarter size. Read the seller's own size guide before ordering (reputable sellers publish the diameter behind each size), check the return and complimentary-resize policy, and for surprise proposals, borrow one of their well-fitting rings and measure its inner diameter in secret — it is far more reliable than guessing from a finger traced on paper. If you are between sizes and the seller offers free resizing, order the slightly larger size: sizing down is almost always easier than sizing up.</p>
+
+      <h3 class="font-serif text-2xl font-semibold text-espresso pt-4">When to get professionally sized</h3>
+      <p>At-home methods are excellent for fashion rings, gifts and first-pass estimates, but three situations deserve a jeweller's mandrel: an expensive engagement or wedding ring, a wide or unusually shaped band, and any finger with arthritis or a very large knuckle relative to its base. A professional sizing takes two minutes, is usually free, and removes the last shred of doubt. Use RingWisp to arrive informed — knowing your approximate size in every system makes the jeweller's confirmation quick — and then order with total confidence.</p>
+    </div>
+  </section>
+
+  <!-- ============ FAQS ============ -->
+  <section class="no-print max-w-4xl mx-auto px-4 sm:px-6 pb-16">
+    <div class="text-center mb-8">
+      <p class="text-[11px] tracking-[0.3em] uppercase text-gold font-semibold mb-3">Questions</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-semibold">Frequently asked</h2>
+      <div class="gold-rule max-w-xs mx-auto mt-5"></div>
+    </div>
+    <div id="faqs" class="space-y-4">
+      <details class="bg-cream rounded-2xl border border-gold/30 px-6 py-4 group">
+        <summary class="font-semibold cursor-pointer list-none flex justify-between items-center gap-4">How do I convert a US ring size to a UK ring size? <span class="text-gold text-xl group-open:rotate-45 transition">+</span></summary>
+        <p class="text-sm text-espressoSoft mt-3 leading-relaxed">Every half US size equals one full UK letter: US 6 = UK L, US 7 = UK N, US 8 = UK P, US 9 = UK R. Type your US size into the converter above for the instant UK equivalent plus EU, Japanese and Swiss sizes.</p>
+      </details>
+      <details class="bg-cream rounded-2xl border border-gold/30 px-6 py-4 group">
+        <summary class="font-semibold cursor-pointer list-none flex justify-between items-center gap-4">What is my ring size in millimetres? <span class="text-gold text-xl group-open:rotate-45 transition">+</span></summary>
+        <p class="text-sm text-espressoSoft mt-3 leading-relaxed">In millimetres, ring size means inner diameter: US 7 is 17.3&nbsp;mm, US 6 is 16.5&nbsp;mm, US 8 is 18.1&nbsp;mm. The EU number is the inner circumference instead (EU 54 = 54&nbsp;mm around). Use measurement mode above — enter your mm and get every system.</p>
+      </details>
+      <details class="bg-cream rounded-2xl border border-gold/30 px-6 py-4 group">
+        <summary class="font-semibold cursor-pointer list-none flex justify-between items-center gap-4">How can I measure my ring size at home without a ring sizer? <span class="text-gold text-xl group-open:rotate-45 transition">+</span></summary>
+        <p class="text-sm text-espressoSoft mt-3 leading-relaxed">Wrap paper or non-stretchy string snugly around the finger base, mark the overlap and measure the length in millimetres — that is your inner circumference. Or measure the inner diameter of a ring that already fits. Enter either number above.</p>
+      </details>
+      <details class="bg-cream rounded-2xl border border-gold/30 px-6 py-4 group">
+        <summary class="font-semibold cursor-pointer list-none flex justify-between items-center gap-4">How do I convert a Japanese ring size to a US size? <span class="text-gold text-xl group-open:rotate-45 transition">+</span></summary>
+        <p class="text-sm text-espressoSoft mt-3 leading-relaxed">Japan 12 = US 6, Japan 14 = US 7, Japan 17 = US 8, Japan 19 = US 9. As a rule of thumb, Japanese size is roughly the inner circumference in mm minus 40. The converter above looks up exact Japan-to-US matches across the full chart.</p>
+      </details>
+      <details class="bg-cream rounded-2xl border border-gold/30 px-6 py-4 group">
+        <summary class="font-semibold cursor-pointer list-none flex justify-between items-center gap-4">Should I size up for a wide band ring? <span class="text-gold text-xl group-open:rotate-45 transition">+</span></summary>
+        <p class="text-sm text-espressoSoft mt-3 leading-relaxed">Yes — bands wider than about 6&nbsp;mm fit tighter, so go up half a US size (e.g. 7 to 7.5). Slim bands under 4&nbsp;mm can take the smaller size when you are between sizes. RingWisp's fit tips apply this adjustment to your result automatically.</p>
+      </details>
+      <details class="bg-cream rounded-2xl border border-gold/30 px-6 py-4 group">
+        <summary class="font-semibold cursor-pointer list-none flex justify-between items-center gap-4">Does my ring size change during the day? <span class="text-gold text-xl group-open:rotate-45 transition">+</span></summary>
+        <p class="text-sm text-espressoSoft mt-3 leading-relaxed">Yes. Fingers are smallest in the cool morning and largest in the warm evening; heat, salt, exercise and flights all add size. Measure in the evening at room temperature, and remember the dominant hand runs about half a size larger.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="no-print bg-espresso text-champagne/70">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-center">
+    <p class="font-serif text-2xl text-champagne font-semibold mb-2">RingWisp</p>
+    <p class="text-xs max-w-xl mx-auto leading-relaxed">Conversions follow the standard international jewellery size chart and are a guide — manufacturers vary slightly. For high-value rings, confirm with a professional sizing. Printable sizer must be printed at 100% scale.</p>
+    <p class="text-xs mt-4 text-champagne/40">&copy; 2026 RingWisp. Free forever.</p>
+  </div>
+</footer>
+
+<!-- ============ CORE LOGIC (pure, testable) ============ -->
+<script id="rw-core">
+/* RingWisp core: pure functions, no DOM. Safe to eval in Node. */
+'use strict';
+
+// Master chart: standard international jewellery cross-reference.
+// us: US/Canada · uk: UK/Australia · eu: EU/ISO = inner circumference (mm, rounded)
+// jp: Japan/China · sw: Swiss (circumference − 40, rounded) · dia/circ in mm.
+const RW_CHART = [
+  { us: 3,    uk: 'F',   jp: 4,  eu: 44, sw: 4,  dia: 14.1, circ: 44.2 },
+  { us: 3.5,  uk: 'G',   jp: 5,  eu: 46, sw: 6,  dia: 14.5, circ: 45.5 },
+  { us: 4,    uk: 'H',   jp: 7,  eu: 47, sw: 7,  dia: 14.9, circ: 46.8 },
+  { us: 4.5,  uk: 'I',   jp: 8,  eu: 48, sw: 8,  dia: 15.3, circ: 48.0 },
+  { us: 5,    uk: 'J',   jp: 9,  eu: 49, sw: 9,  dia: 15.7, circ: 49.3 },
+  { us: 5.5,  uk: 'K',   jp: 10, eu: 51, sw: 11, dia: 16.1, circ: 50.6 },
+  { us: 6,    uk: 'L',   jp: 12, eu: 52, sw: 12, dia: 16.5, circ: 51.9 },
+  { us: 6.5,  uk: 'M',   jp: 13, eu: 53, sw: 13, dia: 16.9, circ: 53.1 },
+  { us: 7,    uk: 'N',   jp: 14, eu: 54, sw: 14, dia: 17.3, circ: 54.4 },
+  { us: 7.5,  uk: 'O',   jp: 15, eu: 56, sw: 16, dia: 17.7, circ: 55.7 },
+  { us: 8,    uk: 'P',   jp: 17, eu: 57, sw: 17, dia: 18.1, circ: 57.0 },
+  { us: 8.5,  uk: 'Q',   jp: 18, eu: 58, sw: 18, dia: 18.5, circ: 58.3 },
+  { us: 9,    uk: 'R',   jp: 19, eu: 60, sw: 20, dia: 18.9, circ: 59.5 },
+  { us: 9.5,  uk: 'S',   jp: 20, eu: 61, sw: 21, dia: 19.3, circ: 60.8 },
+  { us: 10,   uk: 'T',   jp: 22, eu: 62, sw: 22, dia: 19.7, circ: 62.1 },
+  { us: 10.5, uk: 'U',   jp: 23, eu: 63, sw: 23, dia: 20.1, circ: 63.4 },
+  { us: 11,   uk: 'V',   jp: 24, eu: 65, sw: 25, dia: 20.5, circ: 64.6 },
+  { us: 11.5, uk: 'W',   jp: 26, eu: 66, sw: 26, dia: 20.9, circ: 65.9 },
+  { us: 12,   uk: 'X',   jp: 27, eu: 67, sw: 27, dia: 21.3, circ: 67.2 },
+  { us: 12.5, uk: 'Y',   jp: 28, eu: 69, sw: 29, dia: 21.7, circ: 68.5 },
+  { us: 13,   uk: 'Z',   jp: 29, eu: 70, sw: 30, dia: 22.1, circ: 69.7 },
+  { us: 13.5, uk: 'Z+1', jp: 30, eu: 71, sw: 31, dia: 22.6, circ: 71.0 },
+  { us: 14,   uk: 'Z+2', jp: 31, eu: 72, sw: 32, dia: 23.0, circ: 72.2 }
+];
+
+const RW_SYSTEMS = ['us', 'uk', 'eu', 'jp', 'sw'];
+
+function rwMmToIn(mm) { return mm / 25.4; }
+
+function rwNormalizeUK(v) {
+  return String(v).trim().toUpperCase()
+    .replace(/½/g, '1/2')
+    .replace(/\s+/g, '')
+    .replace(/1\/2/g, '½');
+}
+
+function rwFindByUS(us)  { return RW_CHART.find(r => r.us === us) || null; }
+function rwFindByUK(uk)  { const n = rwNormalizeUK(uk); return RW_CHART.find(r => rwNormalizeUK(r.uk) === n) || null; }
+function rwFindByJP(jp)  { return RW_CHART.find(r => r.jp === jp) || null; }
+function rwFindByEU(eu)  { return RW_CHART.find(r => r.eu === eu) || null; }
+function rwFindBySW(sw)  { return RW_CHART.find(r => r.sw === sw) || null; }
+
+/* Convert a known size in any system -> full row.
+   Returns {ok:true,row,approx,note} or {ok:false,code,message}.
+   codes: 'invalid' | 'below' | 'above' */
+function rwConvert(system, raw) {
+  if (!RW_SYSTEMS.includes(system)) {
+    return { ok: false, code: 'invalid', message: 'Unknown sizing system.' };
+  }
+  const s = String(raw == null ? '' : raw).trim();
+  if (!s) return { ok: false, code: 'invalid', message: 'Please enter a size.' };
+
+  const lo = RW_CHART[0], hi = RW_CHART[RW_CHART.length - 1];
+  let row = null, num = NaN;
+
+  if (system === 'uk') {
+    row = rwFindByUK(s);
+    if (!row) {
+      return { ok: false, code: 'invalid',
+        message: 'UK size "' + s + '" is not on the chart. Use a letter from ' + lo.uk + ' to ' + hi.uk + ' (e.g. N, Q, Z+1).' };
+    }
+    return { ok: true, row, approx: false, note: '' };
+  }
+
+  num = Number(s);
+  if (!Number.isFinite(num)) {
+    return { ok: false, code: 'invalid', message: '"' + s + '" is not a valid ' + system.toUpperCase() + ' size.' };
+  }
+
+  if (system === 'us') {
+    if (num < lo.us) return { ok: false, code: 'below', message: 'US ' + s + ' is below the chart minimum (US ' + lo.us + ' / ' + lo.dia + ' mm).' };
+    if (num > hi.us) return { ok: false, code: 'above', message: 'US ' + s + ' is above the chart maximum (US ' + hi.us + ' / ' + hi.dia + ' mm).' };
+    row = rwFindByUS(num);
+    if (row) return { ok: true, row, approx: false, note: '' };
+    const near = rwNearestUS(num);
+    return { ok: true, row: near, approx: true, note: 'US ' + s + ' is between published sizes — showing nearest (US ' + near.us + ').' };
+  }
+  if (system === 'eu') {
+    const r = Math.round(num);
+    if (r < lo.eu) return { ok: false, code: 'below', message: 'EU ' + s + ' is below the chart minimum (EU ' + lo.eu + ').' };
+    if (r > hi.eu) return { ok: false, code: 'above', message: 'EU ' + s + ' is above the chart maximum (EU ' + hi.eu + ').' };
+    row = rwFindByEU(r);
+    return { ok: true, row, approx: r !== num, note: r !== num ? 'Rounded to EU ' + r + ' (nearest published size).' : '' };
+  }
+  if (system === 'jp') {
+    const r = Math.round(num);
+    if (r < lo.jp) return { ok: false, code: 'below', message: 'JP ' + s + ' is below the chart minimum (JP ' + lo.jp + ').' };
+    if (r > hi.jp) return { ok: false, code: 'above', message: 'JP ' + s + ' is above the chart maximum (JP ' + hi.jp + ').' };
+    row = rwFindByJP(r);
+    if (row) return { ok: true, row, approx: r !== num, note: r !== num ? 'Rounded to JP ' + r + ' (nearest published size).' : '' };
+    const near = rwNearestJP(r);
+    return { ok: true, row: near, approx: true, note: 'JP ' + s + ' is between published sizes — showing nearest (JP ' + near.jp + ').' };
+  }
+  // sw
+  const r = Math.round(num);
+  if (r < lo.sw) return { ok: false, code: 'below', message: 'Swiss ' + s + ' is below the chart minimum (Swiss ' + lo.sw + ').' };
+  if (r > hi.sw) return { ok: false, code: 'above', message: 'Swiss ' + s + ' is above the chart maximum (Swiss ' + hi.sw + ').' };
+  row = rwFindBySW(r);
+  if (row) return { ok: true, row, approx: r !== num, note: r !== num ? 'Rounded to Swiss ' + r + ' (nearest published size).' : '' };
+  const near = rwNearestSW(r);
+  return { ok: true, row: near, approx: true, note: 'Swiss ' + s + ' is between published sizes — showing nearest (Swiss ' + near.sw + ').' };
+}
+
+function rwNearestUS(us) {
+  let best = RW_CHART[0];
+  for (const r of RW_CHART) if (Math.abs(r.us - us) < Math.abs(best.us - us)) best = r;
+  return best;
+}
+function rwNearestJP(jp) {
+  let best = RW_CHART[0];
+  for (const r of RW_CHART) if (Math.abs(r.jp - jp) < Math.abs(best.jp - jp)) best = r;
+  return best;
+}
+function rwNearestSW(sw) {
+  let best = RW_CHART[0];
+  for (const r of RW_CHART) if (Math.abs(r.sw - sw) < Math.abs(best.sw - sw)) best = r;
+  return best;
+}
+
+/* Measurement (mm) -> size. kind: 'dia' (inner diameter) or 'circ' (circumference).
+   Returns {ok:true,row,approx,note} or {ok:false,code,message}. */
+function rwFromMeasurement(kind, mmRaw) {
+  const mm = Number(mmRaw);
+  if (!Number.isFinite(mm) || mm <= 0) {
+    return { ok: false, code: 'invalid', message: 'Please enter a valid measurement in millimetres.' };
+  }
+  const dia = kind === 'circ' ? mm / Math.PI : mm;
+  const lo = RW_CHART[0], hi = RW_CHART[RW_CHART.length - 1];
+  if (dia < lo.dia - 0.4) {
+    return { ok: false, code: 'below', message: mm + ' mm is below the chart range (minimum ' + (kind === 'circ' ? lo.circ + ' mm circumference' : lo.dia + ' mm diameter') + ').' };
+  }
+  if (dia > hi.dia + 0.4) {
+    return { ok: false, code: 'above', message: mm + ' mm is above the chart range (maximum ' + (kind === 'circ' ? hi.circ + ' mm circumference' : hi.dia + ' mm diameter') + ').' };
+  }
+  let best = RW_CHART[0];
+  for (const r of RW_CHART) if (Math.abs(r.dia - dia) < Math.abs(best.dia - dia)) best = r;
+  const diff = Math.abs(best.dia - dia);
+  if (diff <= 0.15) return { ok: true, row: best, approx: false, note: '' };
+  // bracket between two published sizes
+  const sorted = RW_CHART.slice().sort((a, b) => a.dia - b.dia);
+  let lower = sorted[0], upper = sorted[sorted.length - 1];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (dia >= sorted[i].dia && dia <= sorted[i + 1].dia) { lower = sorted[i]; upper = sorted[i + 1]; break; }
+  }
+  return { ok: true, row: best, approx: true,
+    note: 'Your measurement (' + dia.toFixed(1) + ' mm diameter) falls between US ' + lower.us + ' and US ' + upper.us +
+          ' — nearest published size is US ' + best.us + ' (approximate). When between sizes, prefer the larger for comfort.' };
+}
+
+/* Size in any system -> inner diameter (mm + inches). */
+function rwSizeToDiameter(system, raw) {
+  const c = rwConvert(system, raw);
+  if (!c.ok) return c;
+  return { ok: true, row: c.row, mm: c.row.dia, inches: rwMmToIn(c.row.dia), approx: c.approx, note: c.note };
+}
+
+/* Finger-specific fit advice. hand: 'dominant'|'nondominant'; band: 'slim'|'standard'|'wide'; time: 'morning'|'midday'|'evening' */
+function rwFitAdvice(hand, band, time) {
+  const tips = [];
+  let adjust = 0; // US-size adjustment to recommend
+  if (hand === 'dominant') {
+    tips.push('Dominant hand: this hand does more work and usually measures about half a US size larger — always size the exact finger the ring is for.');
+  } else {
+    tips.push('Non-dominant hand: these fingers run slimmer — a size taken here can feel tight if the ring is worn on the dominant hand.');
+  }
+  if (band === 'wide') {
+    adjust = 0.5;
+    tips.push('Wide band (over 6 mm): covers more skin and fits tighter — go up half a US size from the chart result.');
+  } else if (band === 'slim') {
+    tips.push('Slim band (under 4 mm): if you fall between two sizes, the smaller one usually fits best.');
+  } else {
+    tips.push('Standard band (4–6 mm): follow the chart result directly.');
+  }
+  if (time === 'morning') {
+    tips.push('Morning measurement: fingers are at their smallest now — re-check in the evening before ordering.');
+  } else if (time === 'evening') {
+    tips.push('Evening measurement: fingers are at their largest — this is the safest time to size.');
+  } else {
+    tips.push('Midday measurement: a fair baseline — confirm once more in the evening for the final call.');
+  }
+  tips.push('Room-temperature hands only: cold shrinks fingers, heat and salty food swell them.');
+  return { adjust, tips };
+}
+
+/* Wide-band adjusted recommendation: returns adjusted row or null if out of range. */
+function rwAdjustedRow(row, adjustUS) {
+  if (!adjustUS) return null;
+  return rwFindByUS(row.us + adjustUS);
+}
+</script>
+
+<!-- ============ UI WIRING ============ -->
+<script>
+(function () {
+  'use strict';
+  var lastResult = null;
+
+  function el(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  window.rwSwitchTab = function (which) {
+    var size = which === 'size';
+    el('tab-size').className = (size ? 'tab-active' : 'text-champagne/80') + ' px-4 py-2 rounded-full transition';
+    el('tab-measure').className = (!size ? 'tab-active' : 'text-champagne/80') + ' px-4 py-2 rounded-full transition';
+    el('panel-size').classList.toggle('hidden', !size);
+    el('panel-measure').classList.toggle('hidden', size);
+  };
+
+  function sizeCell(label, value, sub) {
+    return '<div class="rounded-2xl bg-champagne/70 border border-gold/25 px-4 py-4 text-center">' +
+      '<div class="text-[10px] uppercase tracking-widest text-espressoSoft font-semibold">' + label + '</div>' +
+      '<div class="font-serif text-3xl font-semibold mt-1">' + esc(value) + '</div>' +
+      (sub ? '<div class="text-xs text-espressoSoft mt-1">' + esc(sub) + '</div>' : '') + '</div>';
+  }
+
+  function renderResult(conv, sourceLabel) {
+    var box = el('result');
+    if (!conv.ok) {
+      box.classList.remove('hidden');
+      box.innerHTML = '<div class="rounded-2xl border border-red-300 bg-red-50 px-6 py-5 text-sm text-red-900">' +
+        '<strong>Could not convert.</strong> ' + esc(conv.message) + '</div>';
+      lastResult = null;
+      return;
+    }
+    lastResult = conv;
+    var r = conv.row;
+    var fit = rwFitAdvice(el('opt-hand').value, el('opt-band').value, el('opt-time').value);
+    var adjRow = rwAdjustedRow(r, fit.adjust);
+    var html = '<div class="rounded-2xl border border-gold/40 bg-white/60 px-6 py-6">';
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-5">' +
+      '<h3 class="font-serif text-2xl font-semibold">Your size everywhere</h3>' +
+      '<span class="text-xs text-espressoSoft">' + esc(sourceLabel) + '</span></div>';
+    if (conv.approx && conv.note) {
+      html += '<div class="mb-5 rounded-xl bg-amber-50 border border-amber-300 px-4 py-3 text-sm text-amber-900"><strong>Approximate:</strong> ' + esc(conv.note) + '</div>';
+    }
+    html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">' +
+      sizeCell('US / Canada', r.us) +
+      sizeCell('UK / Australia', r.uk) +
+      sizeCell('EU / ISO', r.eu, 'mm circ.') +
+      sizeCell('Japan / China', r.jp) +
+      sizeCell('Swiss', r.sw) + '</div>';
+    html += '<div class="grid sm:grid-cols-2 gap-3 mt-3">' +
+      sizeCell('Inner diameter', r.dia.toFixed(1) + ' mm', rwMmToIn(r.dia).toFixed(3) + ' in') +
+      sizeCell('Inner circumference', r.circ.toFixed(1) + ' mm', rwMmToIn(r.circ).toFixed(3) + ' in') + '</div>';
+    if (adjRow) {
+      html += '<div class="mt-4 rounded-xl bg-espresso text-champagne px-5 py-4 text-sm">' +
+        '<strong class="text-goldLight">Wide-band recommendation:</strong> with a band over 6&nbsp;mm, order ' +
+        '<strong>US ' + adjRow.us + ' / UK ' + esc(adjRow.uk) + ' / EU ' + adjRow.eu + '</strong> instead of the chart size.</div>';
+    }
+    html += '<div class="mt-4"><p class="text-xs uppercase tracking-widest text-espressoSoft font-semibold mb-2">Fit tips for you</p><ul class="space-y-1.5 text-sm text-espressoSoft">';
+    fit.tips.forEach(function (t) { html += '<li class="flex gap-2"><span class="text-gold">◆</span><span>' + esc(t) + '</span></li>'; });
+    html += '</ul></div></div>';
+    box.classList.remove('hidden');
+    box.innerHTML = html;
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  window.rwConvertFromSize = function () {
+    var system = el('in-system').value, raw = el('in-size').value;
+    var names = { us: 'US/CA', uk: 'UK/AU', eu: 'EU/ISO', jp: 'JP/CN', sw: 'Swiss' };
+    renderResult(rwConvert(system, raw), 'Converted from ' + names[system] + ' ' + (raw || '').trim());
+  };
+
+  window.rwConvertFromMeasure = function () {
+    var kind = el('in-kind').value, mm = el('in-mm').value;
+    var label = kind === 'circ' ? 'string length' : 'inner diameter';
+    renderResult(rwFromMeasurement(kind, mm), 'From ' + label + ' of ' + (mm || '').trim() + ' mm');
+  };
+
+  window.rwRefreshFit = function () {
+    var ul = el('fit-tips');
+    var fit = rwFitAdvice(el('opt-hand').value, el('opt-band').value, el('opt-time').value);
+    ul.innerHTML = fit.tips.map(function (t) {
+      return '<li class="flex gap-2"><span class="text-gold">◆</span><span>' + esc(t) + '</span></li>';
+    }).join('');
+    if (lastResult && lastResult.ok) {
+      var src = lastResult._src || 'Converted size';
+      renderResult(lastResult, src);
+    }
+  };
+
+  // Wrap renderResult source memory
+  var _render = renderResult;
+  renderResult = function (conv, src) { if (conv && conv.ok) conv._src = src; _render(conv, src); };
+
+  // Chart table
+  var tb = el('chart-body');
+  tb.innerHTML = RW_CHART.map(function (r, i) {
+    return '<tr class="' + (i % 2 ? 'bg-white/50' : 'bg-champagne/40') + ' border-t border-gold/15">' +
+      '<td class="px-4 py-2.5 font-semibold">US ' + r.us + '</td>' +
+      '<td class="px-4 py-2.5">UK ' + esc(r.uk) + '</td>' +
+      '<td class="px-4 py-2.5">' + r.eu + '</td>' +
+      '<td class="px-4 py-2.5">' + r.jp + '</td>' +
+      '<td class="px-4 py-2.5">' + r.sw + '</td>' +
+      '<td class="px-4 py-2.5">' + r.dia.toFixed(1) + '</td>' +
+      '<td class="px-4 py-2.5">' + r.circ.toFixed(1) + '</td></tr>';
+  }).join('');
+
+  // Printable sizer circles (whole US sizes 3..13)
+  var grid = el('sizer-grid');
+  grid.innerHTML = RW_CHART.filter(function (r) { return Number.isInteger(r.us); }).map(function (r) {
+    var d = r.dia.toFixed(1);
+    return '<div class="text-center">' +
+      '<div class="sizer-circle" style="width:' + d + 'mm;height:' + d + 'mm"></div>' +
+      '<div class="text-xs mt-2 font-semibold">US ' + r.us + '</div>' +
+      '<div class="text-[11px] text-espressoSoft">' + d + ' mm</div></div>';
+  }).join('');
+
+  // Enter key submits
+  el('in-size').addEventListener('keydown', function (e) { if (e.key === 'Enter') window.rwConvertFromSize(); });
+  el('in-mm').addEventListener('keydown', function (e) { if (e.key === 'Enter') window.rwConvertFromMeasure(); });
+
+  window.rwRefreshFit();
+})();
+</script>
+</body>
+</html>
